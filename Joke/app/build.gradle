@@ -24,4 +24,7 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:23.1.1'
     compile 'com.android.support:design:23.1.1'
+    compile project(':libs:pulltorefresh')
+    compile files('libs/fastjson-1.1.36.jar')
+    compile files('libs/afinal_0.5.1_bin.jar')
 }
