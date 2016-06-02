@@ -2,6 +2,8 @@ package com.example.zhuhongwei.joke;
 
 import android.app.Fragment;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.PagerTitleStrip;
@@ -18,6 +20,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.handmark.pulltorefresh.library.PullToRefreshBase;
 import com.handmark.pulltorefresh.library.PullToRefreshListView;
 
@@ -42,11 +45,15 @@ public class choiceFragment extends Fragment implements View.OnClickListener{
     private HorizontalScrollView scrollView;
     private PullToRefreshListView pullToRefreshListView;
     private ListViewAdapter listViewAdapter;
-    private JSONArray jsonArray;
+    private List<JSONArray> arrayList = new ArrayList<JSONArray>();
+    private JSONArray jsonArray = null;
+    private int index;   //标志是第几页
+    private static final int PULL_LIST_X = 0x10;
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_choice,null);
+        index = 0;
         viewPager = (ViewPager)view.findViewById(R.id.viewPager);
         layoutInflater = LayoutInflater.from(getActivity());
         layoutTitle = (LinearLayout)view.findViewById(R.id.layout_title);
@@ -60,25 +67,28 @@ public class choiceFragment extends Fragment implements View.OnClickListener{
         for (int i = 0;i<6;i++){
             View tab = inflater.inflate(R.layout.viewpager_item,null);
             pullToRefreshListView = (PullToRefreshListView)tab.findViewById(R.id.pull_to_refresh);
+            pullToRefreshListView.setMode(PullToRefreshBase.Mode.BOTH);
             pullToRefreshListView.setOnRefreshListener(new PullToRefreshBase.OnRefreshListener2<ListView>() {
                 @Override
                 public void onPullDownToRefresh(PullToRefreshBase<ListView> refreshView) {
-                    String label = DateUtils.formatDateTime(getActivity(),System.currentTimeMillis(),DateUtils.FORMAT_SHOW_TIME|
-                    DateUtils.FORMAT_SHOW_DATE|DateUtils.FORMAT_ABBREV_ALL);
+                    String label = DateUtils.formatDateTime(getActivity(), System.currentTimeMillis(), DateUtils.FORMAT_SHOW_TIME |
+                            DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_ABBREV_ALL);
                     refreshView.getLoadingLayoutProxy().setLastUpdatedLabel(label);
-                    requestData(i);
+                    requestData(index);
                 }
 
                 @Override
                 public void onPullUpToRefresh(PullToRefreshBase<ListView> refreshView) {
-                    String label = DateUtils.formatDateTime(getActivity(),System.currentTimeMillis(),DateUtils.FORMAT_SHOW_TIME|
-                            DateUtils.FORMAT_SHOW_DATE|DateUtils.FORMAT_ABBREV_ALL);
+                    String label = DateUtils.formatDateTime(getActivity(), System.currentTimeMillis(), DateUtils.FORMAT_SHOW_TIME |
+                            DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_ABBREV_ALL);
                     refreshView.getLoadingLayoutProxy().setLastUpdatedLabel(label);
                 }
             });
-
-            listViewAdapter = new ListViewAdapter(getActivity());
+            JSONArray jsonArr = new JSONArray();
+            arrayList.add(jsonArr);
+            listViewAdapter = new ListViewAdapter(getActivity(),(JSONArray)arrayList.get(i));
             pullToRefreshListView.setAdapter(listViewAdapter);
+            //pullToRefreshListView.setRefreshing(true,-Constant.dip2px(this, 60));
             list.add(tab);
 
             TextView textView = null;
@@ -124,25 +134,61 @@ public class choiceFragment extends Fragment implements View.OnClickListener{
                     url = "http://ic.snssdk.com/neihan/stream/mix/v1/?content_type=-101";
                     break;
             }
+        final int index1 = i;
         FinalHttp http = new FinalHttp();
+        Log.i("zhuhongwei----->url",url);
         http.get(url, new AjaxCallBack() {
             @Override
-            public void onSuccess(Object o) {
-                super.onSuccess(o);
+            public void onSuccess(Object response) {
+                pullToRefreshListView.onRefreshComplete();
+                Log.i("zhuhongwei------>", response.toString());
+                Message message = handler.obtainMessage();
+                message.obj = response;
+                message.what = PULL_LIST_X;
+                message.arg1 = index1;
+                handler.sendMessage(message);
             }
+
 
             @Override
             public void onFailure(Throwable t, int errorNo, String strMsg) {
-                super.onFailure(t, errorNo, strMsg);
+                pullToRefreshListView.onRefreshComplete();
+                Message message = handler.obtainMessage();
+                message.obj = "网络异常";
+                message.what = Constent.NETWORKERROR;
+                handler.sendMessage(message);
             }
         });
 
     }
 
+    private Handler handler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            JSONObject object = null;
+            switch (msg.what){
+                case PULL_LIST_X:
+                    //jsonArray.clear();
+                    object = JSONObject.parseObject(msg.obj.toString());
+                    JSONObject dataObject = object.getJSONObject("data");
+                    int i = msg.arg1;
+                    arrayList.get(i).addAll(JSONArray.parseArray(dataObject.getString("data")));
+                    //jsonArray.addAll(JSONArray.parseArray(dataObject.getString("data")));
+                    Log.i("zhuhongwei--->jsonArray", arrayList.get(i).toJSONString());
+                    pullToRefreshListView.onRefreshComplete();
+                    listViewAdapter.notifyDataSetChanged();
+                    break;
+                case Constent.NETWORKERROR:
+                    break;
+                default:
+                    break;
+            }
+        }
+    };
     public ViewPager.OnPageChangeListener changeListener = new ViewPager.OnPageChangeListener() {
         @Override
         public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-
+                index = position;
         }
 
         @Override
@@ -154,8 +200,10 @@ public class choiceFragment extends Fragment implements View.OnClickListener{
                 }else {
                     textView.setTextColor(getResources().getColor(R.color.brown));
                 }
-                textView.setKeepScreenOn(true);
+               // textView.setKeepScreenOn(true);
             }
+
+            listViewAdapter.notifyDataSetChanged();
         }
 
         @Override
@@ -167,7 +215,6 @@ public class choiceFragment extends Fragment implements View.OnClickListener{
     @Override
     public void onClick(View v) {
         switch (v.getId()){
-
             default:
                 if (v.getTag() != null){
                     int position = (int)v.getTag();

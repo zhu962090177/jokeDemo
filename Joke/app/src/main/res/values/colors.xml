@@ -9,4 +9,5 @@
     <color name="gray">#B7B7B1</color>
     <color name="lightBlack">#4d4444</color>
     <color name="titleSelected">#fc8585</color>
+    <color name="comment_bg">#dad0d0</color>
 </resources>
