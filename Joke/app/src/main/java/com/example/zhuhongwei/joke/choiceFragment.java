@@ -49,6 +49,7 @@ public class choiceFragment extends Fragment implements View.OnClickListener{
     private JSONArray jsonArray = null;
     private int index;   //标志是第几页
     private static final int PULL_LIST_X = 0x10;
+    private List<PullToRefreshListView>  listViewList = new ArrayList<PullToRefreshListView>();
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -67,6 +68,7 @@ public class choiceFragment extends Fragment implements View.OnClickListener{
         for (int i = 0;i<6;i++){
             View tab = inflater.inflate(R.layout.viewpager_item,null);
             pullToRefreshListView = (PullToRefreshListView)tab.findViewById(R.id.pull_to_refresh);
+            listViewList.add(pullToRefreshListView);
             pullToRefreshListView.setMode(PullToRefreshBase.Mode.BOTH);
             pullToRefreshListView.setOnRefreshListener(new PullToRefreshBase.OnRefreshListener2<ListView>() {
                 @Override
@@ -86,7 +88,7 @@ public class choiceFragment extends Fragment implements View.OnClickListener{
             });
             JSONArray jsonArr = new JSONArray();
             arrayList.add(jsonArr);
-            listViewAdapter = new ListViewAdapter(getActivity(),(JSONArray)arrayList.get(i));
+            listViewAdapter = new ListViewAdapter(getActivity(),(JSONArray)arrayList.get(i),this);
             pullToRefreshListView.setAdapter(listViewAdapter);
             //pullToRefreshListView.setRefreshing(true,-Constant.dip2px(this, 60));
             list.add(tab);
@@ -140,7 +142,8 @@ public class choiceFragment extends Fragment implements View.OnClickListener{
         http.get(url, new AjaxCallBack() {
             @Override
             public void onSuccess(Object response) {
-                pullToRefreshListView.onRefreshComplete();
+                //listViewList.get(index1).onRefreshComplete();
+                //pullToRefreshListView.onRefreshComplete();
                 Log.i("zhuhongwei------>", response.toString());
                 Message message = handler.obtainMessage();
                 message.obj = response;
@@ -152,7 +155,8 @@ public class choiceFragment extends Fragment implements View.OnClickListener{
 
             @Override
             public void onFailure(Throwable t, int errorNo, String strMsg) {
-                pullToRefreshListView.onRefreshComplete();
+                //listViewList.get(index1).onRefreshComplete();
+                //pullToRefreshListView.onRefreshComplete();
                 Message message = handler.obtainMessage();
                 message.obj = "网络异常";
                 message.what = Constent.NETWORKERROR;
@@ -175,10 +179,13 @@ public class choiceFragment extends Fragment implements View.OnClickListener{
                     arrayList.get(i).addAll(JSONArray.parseArray(dataObject.getString("data")));
                     //jsonArray.addAll(JSONArray.parseArray(dataObject.getString("data")));
                     Log.i("zhuhongwei--->jsonArray", arrayList.get(i).toJSONString());
-                    pullToRefreshListView.onRefreshComplete();
+                    listViewList.get(i).onRefreshComplete();
+                    //pullToRefreshListView.onRefreshComplete();
                     listViewAdapter.notifyDataSetChanged();
                     break;
                 case Constent.NETWORKERROR:
+                    pullToRefreshListView.onRefreshComplete();
+                    listViewAdapter.notifyDataSetChanged();
                     break;
                 default:
                     break;
@@ -215,6 +222,10 @@ public class choiceFragment extends Fragment implements View.OnClickListener{
     @Override
     public void onClick(View v) {
         switch (v.getId()){
+            case R.id.tv_dislike:
+                int i = Integer.valueOf(v.getTag().toString());
+
+                break;
             default:
                 if (v.getTag() != null){
                     int position = (int)v.getTag();

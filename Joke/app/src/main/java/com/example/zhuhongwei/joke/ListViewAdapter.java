@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 
 import com.alibaba.fastjson.JSONArray;
@@ -19,14 +20,16 @@ import net.tsz.afinal.FinalBitmap;
 /**
  * Created by sunzhengchun on 16/6/1.
  */
-public class ListViewAdapter extends BaseAdapter {
+public class ListViewAdapter extends BaseAdapter{
     private Context context;
     private JSONArray jsonArray;
     private FinalBitmap fb;
-    public ListViewAdapter(Context context, JSONArray jsonArray) {
+    private View.OnClickListener onClickListener;
+    public ListViewAdapter(Context context, JSONArray jsonArray,View.OnClickListener onClickListener) {
         this.context = context;
         this.jsonArray = jsonArray;
         fb = FinalBitmap.create(context);
+        this.onClickListener = onClickListener;
     }
 
     public ListViewAdapter(Context context) {
@@ -103,6 +106,13 @@ public class ListViewAdapter extends BaseAdapter {
         }else {
             viewHolder.commentLayout.setVisibility(View.GONE);
         }
+        viewHolder.upperNumTextView.setText(groupObject.getString("digg_count"));
+        viewHolder.downNumTextView.setText(groupObject.getString("bury_count"));
+        viewHolder.newsNumTextView.setText(groupObject.getString("comment_count"));
+        viewHolder.moreNumTextView.setText(groupObject.getString("share_count"));
+
+        viewHolder.dislikeTextView.setOnClickListener(onClickListener);
+        viewHolder.dislikeTextView.setTag(position);
         return convertView;
     }
 
