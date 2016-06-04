@@ -1,6 +1,7 @@
 package com.example.zhuhongwei.joke;
 
 import android.app.Fragment;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -14,9 +15,13 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.widget.BaseAdapter;
 import android.widget.HorizontalScrollView;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 
 import com.alibaba.fastjson.JSONArray;
@@ -50,6 +55,13 @@ public class choiceFragment extends Fragment implements View.OnClickListener{
     private int index;   //标志是第几页
     private static final int PULL_LIST_X = 0x10;
     private List<PullToRefreshListView>  listViewList = new ArrayList<PullToRefreshListView>();
+    private PopupWindow popupWindow;
+    private TextView cancelTextView;
+    private TextView okTextView;
+    private ListView popupListView;
+    private PopupListViewAdapter popupListViewAdapter;
+    //private List<JSONObject> popupArrayList = new ArrayList<>();
+    private JSONArray popupArray = new JSONArray();
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -64,7 +76,26 @@ public class choiceFragment extends Fragment implements View.OnClickListener{
         String[] temp = new String[]{"推荐","视频","图片","段子","精华","同城"};
         titleList = new ArrayList<>();
 
+        int width = getActivity().getWindowManager().getDefaultDisplay().getWidth();
+        int height = getActivity().getWindowManager().getDefaultDisplay().getHeight();
 
+        View popupView = getActivity().getLayoutInflater().inflate(R.layout.popup_window,null);
+        popupWindow = new PopupWindow(popupView,500,ViewGroup.LayoutParams.WRAP_CONTENT,true);
+        popupWindow.setBackgroundDrawable(new ColorDrawable());
+        popupView.setFocusable(false);
+        popupListView = (ListView)popupView.findViewById(R.id.dislike_listView);
+        cancelTextView = (TextView)popupView.findViewById(R.id.tv_dislike_cancel);
+        okTextView = (TextView)popupView.findViewById(R.id.tv_dislike_ok);
+        cancelTextView.setOnClickListener(this);
+        okTextView.setOnClickListener(this);
+        popupListViewAdapter = new PopupListViewAdapter();
+        popupListView.setAdapter(popupListViewAdapter);
+        popupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
+            @Override
+            public void onDismiss() {
+                setBackgroundAlpha(1.0f);
+            }
+        });
         for (int i = 0;i<6;i++){
             View tab = inflater.inflate(R.layout.viewpager_item,null);
             pullToRefreshListView = (PullToRefreshListView)tab.findViewById(R.id.pull_to_refresh);
@@ -112,6 +143,12 @@ public class choiceFragment extends Fragment implements View.OnClickListener{
         viewPager.setAdapter(adapter);
         viewPager.setOnPageChangeListener(changeListener);
         return view;
+    }
+
+    public void setBackgroundAlpha(float alpha){
+        WindowManager.LayoutParams layoutParams = getActivity().getWindow().getAttributes();
+        layoutParams.alpha = alpha;
+        getActivity().getWindow().setAttributes(layoutParams);
     }
 
     private void requestData(int i){
@@ -224,7 +261,14 @@ public class choiceFragment extends Fragment implements View.OnClickListener{
         switch (v.getId()){
             case R.id.tv_dislike:
                 int i = Integer.valueOf(v.getTag().toString());
-
+                popupArray.clear();
+                JSONObject tempObject = (JSONObject)arrayList.get(index).get(i);
+                JSONObject groupObj = (JSONObject)tempObject.getJSONObject("group");
+                popupArray.addAll(JSONArray.parseArray(groupObj.getString("dislike_reason")));
+               // popupArray = JSONArray.parseArray(tempObject.getString("dislike_reason"));
+                popupListViewAdapter.notifyDataSetChanged();
+                setBackgroundAlpha(0.5f);
+                popupWindow.showAtLocation(v,Gravity.CENTER,0,0);
                 break;
             default:
                 if (v.getTag() != null){
@@ -233,6 +277,8 @@ public class choiceFragment extends Fragment implements View.OnClickListener{
                 }
         }
     }
+
+
 
     public class MyAdapter extends PagerAdapter{
 
@@ -257,6 +303,46 @@ public class choiceFragment extends Fragment implements View.OnClickListener{
             container.removeView(list.get(position));
         }
 
+    }
+
+    public class PopupListViewAdapter extends BaseAdapter{
+
+        @Override
+        public int getCount() {
+            return popupArray.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return popupArray.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            ViewHolder viewHolder = null;
+            if (convertView == null){
+                convertView = View.inflate(getActivity(),R.layout.popup_list_item,null);
+                viewHolder = new ViewHolder();
+                viewHolder.popupHelloWorld = (TextView)convertView.findViewById(R.id.popup_list_hello);
+                viewHolder.popuplistImage = (ImageView)convertView.findViewById(R.id.iv_popuplist_selected);
+                convertView.setTag(viewHolder);
+            }else {
+                viewHolder = (ViewHolder)convertView.getTag();
+            }
+            JSONObject dislikeObj = popupArray.getJSONObject(position);
+            viewHolder.popupHelloWorld.setText(dislikeObj.getString("title"));
+            return convertView;
+        }
+
+        class ViewHolder{
+            private TextView popupHelloWorld;
+            private ImageView popuplistImage;
+        }
     }
 }
 
