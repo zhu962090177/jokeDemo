@@ -1,6 +1,88 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/white">
+
+    <LinearLayout
+        android:id="@+id/layout_twoFragment_title"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:orientation="horizontal"
+        android:background="@color/title_common_bar"
+        android:gravity="center_horizontal">
+        <ImageView
+            android:id="@+id/iv_twoFragment_lefimage"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/foundsearch"
+            android:layout_gravity="center_vertical"
+            android:layout_margin="8dp"/>
+
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1">
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1"/>
+        </RelativeLayout>
+        <TextView
+            android:id="@+id/tv_twoFragment_titleleft"
+            android:layout_width="70dp"
+            android:layout_height="30dp"
+            android:text="热吧"
+            android:gravity="center"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:layout_gravity="center_vertical"
+            android:background="@drawable/optionleft_press"/>
+        <TextView
+            android:id="@+id/tv_twoFragment_titleright"
+            android:layout_width="70dp"
+            android:layout_height="30dp"
+            android:text="订阅"
+            android:gravity="center"
+            android:textColor="@color/brown"
+            android:textSize="18sp"
+            android:layout_gravity="center_vertical"
+            android:background="@drawable/optionright"/>
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1">
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1"/>
+        </RelativeLayout>
+        <ImageView
+            android:id="@+id/iv_twoFragment_rightimage"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_gravity="center_vertical"
+            android:src="@drawable/nearbypeople"
+            android:layout_margin="8dp"/>
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/frame_twoFragment_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <fragment
+            android:id="@+id/fragment_twoFragment_one"
+            android:name="com.example.zhuhongwei.joke.TwoFragmentOne"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:layout="@layout/towfragment_one" />
+        <fragment
+            android:id="@+id/fragment_twoFragment_two"
+            android:name="com.example.zhuhongwei.joke.TwoFragmentTwo"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:layout="@layout/twofragment_two" />
+    </FrameLayout>
 
 </LinearLayout>

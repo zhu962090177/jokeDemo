@@ -24,11 +24,14 @@ public class ListViewAdapter extends BaseAdapter{
     private Context context;
     private JSONArray jsonArray;
     private FinalBitmap fb;
+    private int is_comment_upper;
     private View.OnClickListener onClickListener;
-    public ListViewAdapter(Context context, JSONArray jsonArray,View.OnClickListener onClickListener) {
+
+    public ListViewAdapter(Context context, JSONArray jsonArray, int is_comment_upper, View.OnClickListener onClickListener) {
         this.context = context;
         this.jsonArray = jsonArray;
         fb = FinalBitmap.create(context);
+        this.is_comment_upper = is_comment_upper;
         this.onClickListener = onClickListener;
     }
 
@@ -103,6 +106,11 @@ public class ListViewAdapter extends BaseAdapter{
             viewHolder.commentUserName.setText(commentObject.getString("user_name"));
             viewHolder.commentUpperNum.setText(commentObject.getString("digg_count"));
             viewHolder.commentTextView.setText(commentObject.getString("text"));
+            if (is_comment_upper == 1){
+                viewHolder.commentUpperImageView.setImageResource(R.drawable.digupicon_textpage_press);
+            }else {
+                viewHolder.commentUpperImageView.setImageResource(R.drawable.digupicon_textpage_night);
+            }
         }else {
             viewHolder.commentLayout.setVisibility(View.GONE);
         }
@@ -113,6 +121,7 @@ public class ListViewAdapter extends BaseAdapter{
 
         viewHolder.dislikeTextView.setOnClickListener(onClickListener);
         viewHolder.dislikeTextView.setTag(position);
+        viewHolder.commentUpperImageView.setOnClickListener(onClickListener);
         return convertView;
     }
 

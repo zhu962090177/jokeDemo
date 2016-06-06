@@ -16,6 +16,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
@@ -62,6 +63,8 @@ public class choiceFragment extends Fragment implements View.OnClickListener{
     private PopupListViewAdapter popupListViewAdapter;
     //private List<JSONObject> popupArrayList = new ArrayList<>();
     private JSONArray popupArray = new JSONArray();
+    private List imageList = new ArrayList();
+    private int is_comment_upper = 0;
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -90,6 +93,7 @@ public class choiceFragment extends Fragment implements View.OnClickListener{
         okTextView.setOnClickListener(this);
         popupListViewAdapter = new PopupListViewAdapter();
         popupListView.setAdapter(popupListViewAdapter);
+
         popupWindow.setOnDismissListener(new PopupWindow.OnDismissListener() {
             @Override
             public void onDismiss() {
@@ -119,7 +123,7 @@ public class choiceFragment extends Fragment implements View.OnClickListener{
             });
             JSONArray jsonArr = new JSONArray();
             arrayList.add(jsonArr);
-            listViewAdapter = new ListViewAdapter(getActivity(),(JSONArray)arrayList.get(i),this);
+            listViewAdapter = new ListViewAdapter(getActivity(),(JSONArray)arrayList.get(i),is_comment_upper,this);
             pullToRefreshListView.setAdapter(listViewAdapter);
             //pullToRefreshListView.setRefreshing(true,-Constant.dip2px(this, 60));
             list.add(tab);
@@ -144,6 +148,7 @@ public class choiceFragment extends Fragment implements View.OnClickListener{
         viewPager.setOnPageChangeListener(changeListener);
         return view;
     }
+
 
     public void setBackgroundAlpha(float alpha){
         WindowManager.LayoutParams layoutParams = getActivity().getWindow().getAttributes();
@@ -270,6 +275,16 @@ public class choiceFragment extends Fragment implements View.OnClickListener{
                 setBackgroundAlpha(0.5f);
                 popupWindow.showAtLocation(v,Gravity.CENTER,0,0);
                 break;
+            case R.id.tv_dislike_cancel:
+                popupWindow.dismiss();
+                break;
+            case R.id.tv_dislike_ok:
+                popupWindow.dismiss();
+                break;
+            case R.id.iv_comment_upper:
+                is_comment_upper = 1;
+                listViewAdapter.notifyDataSetChanged();
+                break;
             default:
                 if (v.getTag() != null){
                     int position = (int)v.getTag();
@@ -277,8 +292,6 @@ public class choiceFragment extends Fragment implements View.OnClickListener{
                 }
         }
     }
-
-
 
     public class MyAdapter extends PagerAdapter{
 
@@ -305,12 +318,13 @@ public class choiceFragment extends Fragment implements View.OnClickListener{
 
     }
 
-    public class PopupListViewAdapter extends BaseAdapter{
+    public class PopupListViewAdapter extends BaseAdapter {
 
         @Override
         public int getCount() {
             return popupArray.size();
         }
+
 
         @Override
         public Object getItem(int position) {
@@ -334,14 +348,40 @@ public class choiceFragment extends Fragment implements View.OnClickListener{
             }else {
                 viewHolder = (ViewHolder)convertView.getTag();
             }
+            imageList.add(R.drawable.anonymous);
             JSONObject dislikeObj = popupArray.getJSONObject(position);
             viewHolder.popupHelloWorld.setText(dislikeObj.getString("title"));
+            viewHolder.popuplistImage.setImageResource((int) imageList.get(position));
+            convertView.setOnClickListener(new onItemChildClicked(position));
             return convertView;
         }
 
         class ViewHolder{
             private TextView popupHelloWorld;
             private ImageView popuplistImage;
+        }
+    }
+
+    private class onItemChildClicked implements View.OnClickListener{
+
+        private int position;
+
+        public onItemChildClicked(int position) {
+            this.position = position;
+        }
+
+        @Override
+        public void onClick(View v) {
+
+            if (imageList.get(position).equals(R.drawable.anonymous_press)){
+                imageList.remove(position);
+                imageList.add(position,R.drawable.anonymous);
+            }else if (imageList.get(position).equals(R.drawable.anonymous)){
+                imageList.remove(position);
+                imageList.add(position, R.drawable.anonymous_press);
+            }
+            popupListViewAdapter.notifyDataSetChanged();
+
         }
     }
 }
